@@ -124,3 +124,7 @@ STATIC_URL = 'static/'
 
 #ativar em producao
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+#login system
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
