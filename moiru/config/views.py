@@ -1,8 +1,12 @@
-from django.http import HttpResponse
+from django.shortcuts import render # <--- Importe o render (geralmente já vem importado)
+# from django.http import HttpResponse (pode apagar ou comentar esse)
 
-# Toda view PRECISA receber pelo menos um argumento (request)
-def home(request):
-    # Aqui a gente processaria dados, banco de dados, etc.
+def home(request, nome):
+
+    context = {
+        'nome':nome,
+        'chamados':['aprender django', 'fazer sistema de auth', 'devolver chave'],
+        'adm':True,
+    }
     
-    # Por fim, retornamos a resposta
-    return HttpResponse("Olá, Pedro! Minha primeira view funcionou.")
+    return render(request, 'index.html', context)

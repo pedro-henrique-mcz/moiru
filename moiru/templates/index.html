@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Página Dinâmica</title>
+</head>
+<body>
+    <h1>Olá, {{ nome }}!</h1>
+    
+    {% if adm %}
+        <h2>Chamados a fazer</h2>
+        <ul>
+        {% for item in chamados %}
+            <li>{{item}}</li>
+        {% endfor %}
+    {% else %}
+        </ul>   
+        <h2>Chamados indisponíveis</h2>
+    {% endif %}
+
+</body>
+</html>
