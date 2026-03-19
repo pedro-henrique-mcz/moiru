@@ -1,0 +1,231 @@
+{% extends 'base_internal.html' %}
+
+{% block content %}
+<style>
+    /* Design de linha clicável para manter o padrão visual do sistema */
+    .table-row-clickable { cursor: pointer; transition: background-color 0.1s ease; }
+    .table-row-clickable:hover td { background-color: #f8fafc !important; }
+    .table-row-clickable:active td { background-color: #f1f5f9 !important; }
+</style>
+
+<div class="px-2 px-md-4 py-3 py-md-4" style="background-color: #f8f9fa; min-height: 100vh;">
+    
+    <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <ol class="breadcrumb m-0">
+            <li class="breadcrumb-item"><a href="{% url 'admin_unit_list' %}" class="text-decoration-none">Unidades</a></li>
+            <li class="breadcrumb-item active">{{ unit.name }}</li>
+        </ol>
+        <a href="{% url 'admin_unit_list' %}" class="btn btn-sm btn-outline-secondary fw-bold bg-white shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Voltar
+        </a>
+    </nav>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <div style="width: 14px; height: 14px; border-radius: 50%; background-color: {{ unit.color }};"></div>
+                        <h2 class="fw-bold m-0 text-dark">{{ unit.name }} ({{ unit.identifier|upper }})</h2>
+                    </div>
+                    <p class="text-muted mb-0 small"><i class="bi bi-geo-alt me-1"></i>{{ unit.address|default:"Endereço não cadastrado" }}, {{ unit.number }}</p>
+                    <p class="text-muted mb-0 small ms-3">{{ unit.neighborhood }} - {{ unit.city }}</p>
+                </div>
+                <button class="btn btn-outline-dark btn-sm px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#editUnitModal">
+                    <i class="bi bi-pencil me-2"></i> Editar Unidade
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+        <h4 class="fw-bold m-0 text-dark">Ambientes</h4>
+        <button class="btn btn-dark btn-sm px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addEnvModal">
+            <i class="bi bi-plus-lg me-1"></i> Novo Ambiente
+        </button>
+    </div>
+
+    <div class="bg-white border rounded-4 overflow-hidden shadow-sm">
+        <div class="table-responsive">
+            <table class="table mb-0 text-nowrap align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Bloco/Setor</th>
+                    <th class="py-3 text-uppercase small fw-bold text-muted">Identificador</th>
+                    <th class="py-3 text-uppercase small fw-bold text-muted">Status</th>
+                    <th class="text-end pe-4 py-3 text-uppercase small fw-bold text-muted">Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for env in environments %}
+                <tr class="table-row-clickable" 
+                    onclick="openEditEnvModal('{{ env.id }}', '{{ env.identifier }}', '{{ env.block|default:'' }}', '{{ env.floor|default:'' }}', '{{ env.occupation|default:'' }}', '{{ env.description|escapejs }}', '{{ env.category.id|default:'' }}')"
+                    style="{% if not env.is_active %}opacity: 0.5;{% endif %}">
+                    <td class="ps-4 py-3 fw-bold text-dark">{{ env.block|default:"-" }}</td>
+                    <td class="py-3 text-muted">{{ env.identifier }}</td>
+                    <td class="py-3">
+                        <span class="badge {% if env.is_active %}bg-success-subtle text-success border border-success{% else %}bg-secondary-subtle text-secondary border border-secondary{% endif %} rounded-pill">
+                            {% if env.is_active %}<i class="bi bi-check-circle me-1"></i>Ativo{% else %}<i class="bi bi-x-circle me-1"></i>Inativo{% endif %}
+                        </span>
+                    </td>
+                    <td class="text-end pe-4 py-3">
+                        <a href="{% url 'admin_toggle_environment_active' env.id %}" 
+                           onclick="event.stopPropagation();" 
+                           class="btn btn-sm border-0 p-0" 
+                           title="Alterar Status">
+                            <i class="bi {% if env.is_active %}bi-toggle-on text-success{% else %}bi-toggle-off text-muted{% endif %} fs-3"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center py-5 text-muted">Nenhum ambiente nesta unidade.</td></tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editUnitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form action="{% url 'admin_edit_unit' unit.id %}" method="POST" class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            {% csrf_token %}
+            <div class="modal-header bg-light border-0">
+                <h5 class="fw-bold modal-title">Editar Unidade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-8"><label class="form-label small fw-bold text-muted">NOME*</label><input type="text" name="name" value="{{ unit.name }}" class="form-control" required></div>
+                    <div class="col-md-4"><label class="form-label small fw-bold text-muted">SIGLA*</label><input type="text" name="identifier" value="{{ unit.identifier }}" class="form-control" required></div>
+                    <div class="col-md-4"><label class="form-label small fw-bold text-muted">CEP</label><input type="text" name="cep" value="{{ unit.cep|default:'' }}" class="form-control"></div>
+                    <div class="col-md-6"><label class="form-label small fw-bold text-muted">RUA</label><input type="text" name="address" value="{{ unit.address|default:'' }}" class="form-control"></div>
+                    <div class="col-md-2"><label class="form-label small fw-bold text-muted">Nº</label><input type="text" name="number" value="{{ unit.number|default:'' }}" class="form-control"></div>
+                    <div class="col-md-5"><label class="form-label small fw-bold text-muted">BAIRRO</label><input type="text" name="neighborhood" value="{{ unit.neighborhood|default:'' }}" class="form-control"></div>
+                    <div class="col-md-5"><label class="form-label small fw-bold text-muted">CIDADE</label><input type="text" name="city" value="{{ unit.city|default:'' }}" class="form-control"></div>
+                    <div class="col-md-2"><label class="form-label small fw-bold text-muted">COR</label><input type="color" name="color" value="{{ unit.color }}" class="form-control form-control-color w-100"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 bg-light">
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-dark fw-bold px-4">Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="addEnvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form action="{% url 'admin_add_environment' unit.id %}" method="POST" class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            {% csrf_token %}
+            <div class="modal-header bg-light border-0">
+                <h5 class="fw-bold modal-title">Novo Ambiente: {{ unit.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">IDENTIFICADOR (SALA/NOME)*</label>
+                        <input type="text" name="identifier" class="form-control" placeholder="Ex: Sala 101" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">CATEGORIA MACRO</label>
+                        <select name="category" class="form-select">
+                            <option value="">Selecione...</option>
+                            {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">TIPO DE OCUPAÇÃO</label>
+                        <input type="text" name="occupation" class="form-control" placeholder="Ex: Sala de Aula, Copa, etc.">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">BLOCO</label>
+                        <input type="text" name="block" class="form-control" placeholder="Ex: A">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">ANDAR</label>
+                        <input type="text" name="floor" class="form-control" placeholder="Ex: Térreo">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-muted">PONTO DE REFERÊNCIA / DESCRIÇÃO</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 bg-light">
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-dark fw-bold px-4">Salvar Ambiente</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="editEnvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form id="editEnvForm" method="POST" class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            {% csrf_token %}
+            <div class="modal-header bg-light border-0">
+                <h5 class="fw-bold modal-title">Editar Ambiente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">IDENTIFICADOR (SALA/NOME)*</label>
+                        <input type="text" name="identifier" id="edit_env_identifier" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">CATEGORIA MACRO</label>
+                        <select name="category" id="edit_env_category" class="form-select">
+                            <option value="">Selecione...</option>
+                            {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">TIPO DE OCUPAÇÃO</label>
+                        <input type="text" name="occupation" id="edit_env_occupation" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">BLOCO</label>
+                        <input type="text" name="block" id="edit_env_block" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">ANDAR</label>
+                        <input type="text" name="floor" id="edit_env_floor" class="form-control">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-muted">PONTO DE REFERÊNCIA / DESCRIÇÃO</label>
+                        <textarea name="description" id="edit_env_description" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 bg-light">
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-dark fw-bold px-4">Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditEnvModal(id, identifier, block, floor, occupation, desc, catId) {
+    const form = document.getElementById('editEnvForm');
+    
+    // Atualiza a URL do formulário com o ID do ambiente correto
+    form.action = `/chamados/gestao/ambientes/${id}/editar/`;
+    
+    // Preenche os campos do modal
+    document.getElementById('edit_env_identifier').value = identifier;
+    document.getElementById('edit_env_block').value = block;
+    document.getElementById('edit_env_floor').value = floor;
+    document.getElementById('edit_env_occupation').value = occupation;
+    document.getElementById('edit_env_description').value = desc;
+    document.getElementById('edit_env_category').value = catId;
+    
+    // Exibe o modal
+    new bootstrap.Modal(document.getElementById('editEnvModal')).show();
+}
+</script>
+
+{% endblock %}

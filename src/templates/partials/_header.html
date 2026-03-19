@@ -1,0 +1,44 @@
+{% load static %}
+
+<header class="top-bar d-flex justify-content-between align-items-center px-3 px-md-4" style="height: var(--topbar-height); background: white; border-bottom: 1px solid #E5E7EB;">
+    
+    <button type="button" class="btn btn-link text-dark p-0 d-lg-none" onclick="window.toggleSidebar()">
+        <i class="bi bi-list" style="font-size: 2rem;"></i>
+    </button>
+
+    <div class="d-none d-lg-block"></div>
+
+    <div class="d-flex align-items-center gap-3">
+        <i class="bi bi-bell fs-5 text-secondary me-2" style="cursor: pointer;"></i>
+
+        <div class="dropdown">
+            <a href="#" class="d-flex align-items-center text-decoration-none gap-2" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                
+                <span class="d-none d-md-block fw-medium text-secondary" style="font-size: 0.95rem;">
+                    {{ user.first_name|default:user.username }}
+                </span>
+
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" class="avatar-circle rounded-circle object-fit-cover shadow-sm" style="width: 40px; height: 40px;" alt="Perfil">
+                {% else %}
+                    <div class="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm" 
+                         style="width: 40px; height: 40px; font-size: 1.1rem; background-color: #13203B;">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                {% endif %}
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2 p-2" aria-labelledby="userDropdown" style="border-radius: 12px; min-width: 180px;">
+                <li>
+                    <form action="{% url 'logout' %}" method="post" class="m-0 p-0">
+                        {% csrf_token %}
+                        <button type="submit" class="dropdown-item d-flex align-items-center gap-2 rounded-2 text-danger px-3 py-2 fw-medium" style="transition: all 0.2s;">
+                            <i class="bi bi-box-arrow-right fs-5"></i>
+                            Sair do Sistema
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</header>

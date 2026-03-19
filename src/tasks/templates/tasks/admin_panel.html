@@ -1,0 +1,85 @@
+{% extends 'base_internal.html' %}
+
+{% block content %}
+<style>
+    .admin-card {
+        background: #FFFFFF; border: 1px solid #F3F4F6; border-radius: 12px;
+        padding: 30px; text-align: center; transition: all 0.2s ease-in-out;
+        height: 100%; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; text-decoration: none; color: inherit;
+    }
+    .admin-card:hover:not(.disabled) {
+        border-color: #D1D5DB; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); transform: translateY(-4px);
+    }
+    /* Estilo para cards desabilitados */
+    .admin-card.disabled { opacity: 0.5; cursor: not-allowed; background-color: #f9fafb; pointer-events: none; }
+    
+    .admin-icon-circle {
+        width: 56px; height: 56px; background-color: #F9FAFB; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 16px; font-size: 1.5rem; color: #111827; transition: all 0.2s;
+    }
+    .admin-card:not(.disabled):hover .admin-icon-circle { background-color: #111827; color: #FFFFFF; }
+    .admin-title { font-size: 1rem; font-weight: 700; color: #111827; margin-bottom: 4px; }
+    .admin-desc { font-size: 0.8rem; color: #6B7280; }
+</style>
+
+<div class="px-2 px-md-4 py-3 py-md-4">
+    <div class="alert alert-light border shadow-sm d-flex align-items-center gap-3 mb-5" style="border-radius: 12px;">
+        <i class="bi bi-info-circle-fill text-primary fs-4"></i>
+        <div>
+            <span class="fw-bold d-block">Aviso de Desenvolvimento</span>
+            <span class="text-muted small">Algumas funções de gestão estão temporariamente desabilitadas enquanto focamos na estrutura de Ambientes.</span>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h3 class="fw-bold text-dark m-0">Área Administrativa</h3>
+        <p class="text-muted">Selecione uma categoria para gerenciar.</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_user_list' %}" class="admin-card text-decoration-none">
+                <div class="admin-icon-circle"><i class="bi bi-people"></i></div>
+                <span class="admin-title">Pessoas</span>
+                <span class="admin-desc">Gerenciar usuários</span>
+            </a>
+        </div>
+
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_unit_list' %}" class="admin-card text-decoration-none">
+                <div class="admin-icon-circle"><i class="bi bi-door-open"></i></div>
+                <span class="admin-title">Ambientes</span>
+                <span class="admin-desc">Gerenciar por unidade</span>
+            </a>
+        </div>
+
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_department_list' %}" class="admin-card text-decoration-none">
+                <div class="admin-icon-circle"><i class="bi bi-building"></i></div>
+                <span class="admin-title">Setores</span>
+                <span class="admin-desc">Gerenciar departamentos</span>
+            </a>
+        </div>
+
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_item_list' %}" class="admin-card text-decoration-none">
+                <div class="admin-icon-circle"><i class="bi bi-box-seam"></i></div>
+                <span class="admin-title">Itens</span>
+                <span class="admin-desc">Equipamentos e objetos</span>
+            </a>
+        </div>
+
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'admin_action_list' %}" class="admin-card text-decoration-none">
+                <div class="admin-icon-circle"><i class="bi bi-tools"></i></div>
+                <span class="admin-title">Ações</span>
+                <span class="admin-desc">Tipos de serviço</span>
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

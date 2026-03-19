@@ -1,0 +1,121 @@
+{% extends 'base_internal.html' %}
+
+{% block content %}
+<div class="px-2 px-md-4 py-3 py-md-4" style="background-color: #f8f9fa; min-height: 100vh;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <a href="{% url 'admin_panel' %}" class="text-decoration-none text-muted small fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> VOLTAR PARA ADMIN
+            </a>
+            <h2 class="fw-bold text-dark mt-2 mb-0">Gestão de Setores</h2>
+        </div>
+        <button class="btn btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addDeptModal">
+            <i class="bi bi-plus-lg me-2"></i>Novo Setor
+        </button>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-nowrap">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="px-4 py-3">Setor (Departamento)</th>
+                            <th>Identificador</th>
+                            <th>Cor / Label</th>
+                            <th class="text-end px-4">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dept in departments %}
+                        <tr>
+                            <td class="px-4 fw-bold text-dark">{{ dept.name }}</td>
+                            <td class="text-muted">{{ dept.identifier }}</td>
+                            <td>
+                                <span class="badge rounded-pill" style="background-color: {{ dept.color }}20; color: {{ dept.color }}; border: 1px solid {{ dept.color }};">
+                                    {{ dept.color }}
+                                </span>
+                            </td>
+                            <td class="text-end px-4">
+                                <button class="btn btn-sm btn-light border text-secondary" data-bs-toggle="modal" data-bs-target="#editDeptModal{{ dept.id }}">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </button>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="editDeptModal{{ dept.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow">
+                                    <div class="modal-header bg-light">
+                                        <h5 class="modal-title fw-bold">Editar Setor</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{% url 'admin_edit_department' dept.id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body p-4">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small text-muted text-uppercase">Nome do Setor</label>
+                                                <input type="text" name="name" class="form-control" value="{{ dept.name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small text-muted text-uppercase">Identificador</label>
+                                                <input type="text" name="identifier" class="form-control" value="{{ dept.identifier }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small text-muted text-uppercase">Cor Hexadecimal</label>
+                                                <input type="color" name="color" class="form-control form-control-color w-100" value="{{ dept.color }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer bg-light border-top-0">
+                                            <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-primary fw-bold">Salvar Alterações</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">Nenhum setor cadastrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addDeptModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold">Novo Setor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'admin_department_list' %}">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Nome do Setor</label>
+                        <input type="text" name="name" class="form-control" placeholder="Ex: Tecnologia da Informação" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Identificador (Sigla)</label>
+                        <input type="text" name="identifier" class="form-control" placeholder="Ex: TI" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Cor de Destaque</label>
+                        <input type="color" name="color" class="form-control form-control-color w-100" value="#0d6efd" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0">
+                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Cadastrar Setor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

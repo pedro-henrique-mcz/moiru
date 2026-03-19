@@ -1,0 +1,110 @@
+{% extends 'base_internal.html' %}
+
+{% block content %}
+<style>
+    /* Estilos baseados no Design System do Moiru */
+    .report-header { background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+    .table-container { background: white; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; }
+    
+    .table-ref th { font-size: 0.75rem; text-transform: uppercase; color: #6B7280; font-weight: 700; border-bottom: 1px solid #E5E7EB; padding: 14px 24px; background-color: #F9FAFB; letter-spacing: 0.05em; }
+    .table-ref td { padding: 14px 24px; border-bottom: 1px solid #F3F4F6; vertical-align: middle; font-size: 0.95rem; color: #111827; }
+    
+    /* Barrinha de progresso customizada */
+    .progress-slim { height: 8px; border-radius: 10px; background-color: #E5E7EB; width: 100px; }
+    .progress-bar-custom { background-color: #13203B; border-radius: 10px; }
+    
+    /* Botão de filtro */
+    .btn-black { background-color: #111827; color: white; border: none; font-weight: 600; padding: 10px 20px; border-radius: 6px; transition: all 0.2s; }
+    .btn-black:hover { background-color: #000; color: white; }
+    
+    /* Ajustes Mobile */
+    @media (max-width: 576px) {
+        .report-header { padding: 15px; }
+    }
+</style>
+
+<div class="px-2 px-md-4 pb-4">
+    
+    <div class="report-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 shadow-sm">
+        <div>
+            <h3 class="fw-bold mb-1" style="color: #13203B;">Produtividade da Equipe</h3>
+            <p class="text-muted small mb-0">Desempenho de resolução de chamados por técnico.</p>
+        </div>
+
+        <form method="GET" class="d-flex flex-column flex-md-row gap-2 align-items-end align-items-md-center w-100 ms-md-4">
+            <div class="form-group mb-0 w-100" style="max-width: 250px;">
+                <label class="small text-muted fw-bold mb-1 d-block" style="font-size: 0.75rem; text-transform: uppercase;">Técnico</label>
+                
+                <input type="text" name="q_nome" value="{{ q_nome }}" placeholder="Nome do técnico..." class="form-control bg-light" style="border-color: #E5E7EB; box-shadow: none; height: 42px;" list="listaTecnicos" autocomplete="off">
+                
+                <datalist id="listaTecnicos">
+                    {% for tec in todos_tecnicos %}
+                        <option value="{{ tec.first_name|default:tec.username }}"></option>
+                    {% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group mb-0 w-100" style="max-width: 150px;">
+                <label class="small text-muted fw-bold mb-1 d-block" style="font-size: 0.75rem; text-transform: uppercase;">Data Inicial</label>
+                <input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control bg-light" style="border-color: #E5E7EB; box-shadow: none; height: 42px;">
+            </div>
+
+            <div class="form-group mb-0 w-100" style="max-width: 150px;">
+                <label class="small text-muted fw-bold mb-1 d-block" style="font-size: 0.75rem; text-transform: uppercase;">Data Final</label>
+                <input type="date" name="data_fim" value="{{ data_fim }}" class="form-control bg-light" style="border-color: #E5E7EB; box-shadow: none; height: 42px;">
+            </div>
+
+            <div class="form-group mb-0 mt-2 mt-md-0 w-100" style="max-width: 120px;">
+                <label class="d-none d-md-block mb-1">&nbsp;</label>
+                <button type="submit" class="btn btn-black w-100" style="height: 42px;"><i class="bi bi-funnel"></i> Filtrar</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-ref mb-0 text-nowrap align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Técnico / Executor</th>
+                        <th class="text-center">Total Atribuído</th>
+                        <th class="text-center text-success">Concluídos</th>
+                        <th class="text-center" style="color: #be123c;">Pendentes</th>
+                        <th class="text-end pe-4">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in dados_relatorio %}
+                    <tr>
+                        <td class="ps-4 fw-bold" style="color: #13203B;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center border text-secondary fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem; border-color: #E5E7EB; background-color: #F9FAFB;">
+                                    {{ item.nome|first|upper }}
+                                </div>
+                                {{ item.nome }}
+                            </div>
+                        </td>
+                        <td class="text-center fw-medium">{{ item.total }}</td>
+                        <td class="text-center fw-bold text-success">{{ item.concluidos }}</td>
+                        <td class="text-center fw-medium" style="color: #be123c;">{{ item.pendentes }}</td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'technician_report' item.id %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}" class="btn btn-sm btn-outline-primary fw-bold" style="border-radius: 6px;">
+                                <i class="bi bi-file-earmark-text"></i> Detalhes
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-inbox text-muted fs-1 mb-3 d-block opacity-50"></i>
+                            <p class="text-muted mb-0">Nenhum chamado atribuído no período selecionado.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

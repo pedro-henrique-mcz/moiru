@@ -1,0 +1,403 @@
+{% extends 'base_internal.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* --- CONFIGURAÇÃO DE DESIGN (CLEAN UI) --- */
+    :root {
+        --text-label: #6b7280;
+        --text-dark: #374151;
+        --bg-description: #f9fafb;
+        --border-color: #e5e7eb;
+        --accordion-hover: #f3f4f6;
+    }
+
+    /* Container Geral */
+    .ticket-main-wrapper {
+        min-height: 100vh;
+        background-color: #f3f4f6;
+        padding-bottom: 60px;
+    }
+
+    /* Card Principal */
+    .ticket-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 24px;
+    }
+
+    /* Card de Seção (Timeline/Form) */
+    .section-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid var(--border-color);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .section-card-header {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* Toolbar Header */
+    .ticket-header-toolbar {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-color);
+        background-color: #fff;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .toolbar-link { color: #6b7280; text-decoration: none; font-weight: 500; font-size: 0.9rem; }
+    .toolbar-icon { cursor: pointer; color: #9ca3af; transition: color 0.2s; font-size: 1rem; padding: 4px; }
+    .toolbar-icon:hover { color: #374151; }
+
+    /* Metadados e Sidebar */
+    .meta-row { display: flex; align-items: center; margin-bottom: 2.5rem; }
+    .meta-icon { color: var(--text-label); font-size: 1.2rem; width: 40px; display: flex; justify-content: flex-start; }
+    .meta-label-text { font-size: 0.9rem; color: var(--text-label); width: 150px; font-weight: 600; }
+    .status-dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; margin-right: 10px; border: 2px solid white; box-shadow: 0 0 0 1px rgba(0,0,0,0.1); }
+    .desc-box { background-color: var(--bg-description); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; color: #4b5563; font-size: 0.95rem; line-height: 1.6; margin-top: 10px; }
+    
+    /* Sidebar Right Styles */
+    .sidebar-panel { border-left: 1px solid var(--border-color); background-color: #fff; padding: 0; min-height: 100%; }
+    .accordion-btn { width: 100%; background: none; border: none; border-bottom: 1px solid var(--border-color); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; color: #4b5563; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+    .accordion-btn:hover { background-color: var(--accordion-hover); }
+    .accordion-content { padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
+    .jira-item { margin-bottom: 12px; }
+    .jira-label { display: block; font-size: 0.75rem; font-weight: 700; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; }
+    .jira-value { font-size: 0.9rem; color: #111827; font-weight: 500; }
+    .id-float { position: absolute; top: 16px; right: 16px; background-color: #e5e7eb; color: #374151; font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 4px; z-index: 10; }
+
+    /* Timeline Items */
+    .timeline-item { display: flex; gap: 16px; padding: 20px 0; border-bottom: 1px solid #f3f4f6; }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; color: #64748b; flex-shrink: 0; }
+    .timeline-content { flex-grow: 1; }
+    .timeline-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .timeline-user { font-weight: 600; font-size: 0.95rem; color: #111827; }
+    .timeline-date { font-size: 0.8rem; color: #9ca3af; }
+    .timeline-body { color: #4b5563; font-size: 0.95rem; line-height: 1.5; }
+    .status-badge { font-size: 0.7rem; background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 600; border: 1px solid #bae6fd; }
+
+    /* --- ESTILO DO DROPDOWN "ADICIONAR ACOMPANHAMENTO" --- */
+    .add-action-bar {
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        padding: 12px 20px;
+        color: #4b5563;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .add-action-bar:hover {
+        background-color: #f9fafb;
+        border-color: #9ca3af;
+        color: #111827;
+    }
+    .add-action-bar .chevron { transition: transform 0.3s ease; }
+    .add-action-bar[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+    .add-action-bar[aria-expanded="true"] { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none; }
+
+    /* O Card que abre (Formulário) */
+    .reply-card {
+        background: white;
+        border: 1px solid #d1d5db;
+        border-top: none; 
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 12px; font-size: 0.95rem; resize: none; min-height: 100px; margin-bottom: 16px; transition: border-color 0.2s; }
+    .action-textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+    .team-select { width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 0.9rem; background-color: #fff; }
+    .btn-update { background-color: #3b82f6; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; float: right; transition: background 0.2s; }
+    .btn-update:hover { background-color: #2563eb; }
+    .form-group-label { font-size: 0.75rem; font-weight: 700; color: #6b7280; margin-bottom: 6px; display: block; text-transform: uppercase; }
+</style>
+
+<div class="px-4 py-3 ticket-main-wrapper">
+    
+    <div class="ticket-container">
+        <div class="ticket-header-toolbar">
+            <div class="fw-medium text-dark small">
+                <a href="{% url 'dashboard' %}" class="toolbar-link">dashboard</a> 
+                <span class="text-muted mx-1">/</span> 
+                <span class="text-dark fw-bold">chamado #{{ ticket.id }}</span>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                {% if is_admin or request.user == ticket.creator %}
+                    <a href="{% url 'edit_ticket' ticket.id %}" class="text-decoration-none">
+                        <i class="bi bi-pencil-square toolbar-icon" title="Editar"></i>
+                    </a>
+                {% endif %}
+                
+                <i class="bi bi-share toolbar-icon" id="btnShare" title="Copiar link do chamado" data-url="{{ request.build_absolute_uri }}"></i>
+
+                <div class="dropdown d-inline-block">
+                    <i class="bi bi-three-dots toolbar-icon" id="dropdownMenuOpcoes" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;" title="Mais opções"></i>
+                    
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="dropdownMenuOpcoes">
+                        <li>
+                            <a class="dropdown-item text-danger fw-bold" href="{% url 'delete_ticket' ticket.id %}" onclick="return confirm('Tem certeza que deseja excluir este chamado? Ele desaparecerá do painel para todos.');">
+                                <i class="bi bi-trash3 me-2"></i> Excluir Chamado
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-0 flex-grow-1">
+            <div class="col-lg-8 p-5 position-relative">
+                <h1 class="fw-bold text-dark mb-2">{{ ticket.title }}</h1>
+                <div class="d-flex align-items-center gap-2 mb-5">
+                    <div class="rounded-circle" style="width: 24px; height: 24px; background-image: url('https://ui-avatars.com/api/?name={{ ticket.requester.username }}&background=random'); background-size: cover;"></div>
+                    <span class="text-secondary small">Solicitado por <strong class="text-dark">{{ ticket.requester.get_full_name|default:ticket.requester.username }}</strong></span>
+                </div>
+
+                <div class="mb-5 py-2">
+                    <div class="meta-row" style="margin-bottom: 2.5rem;">
+                        <div class="meta-icon"><i class="bi bi-record-circle"></i></div>
+                        <div class="meta-label-text">Status</div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-dot" style="background-color: {{ ticket.status.color }}"></span>
+                            <span style="color: {{ ticket.status.color }}; font-weight: 700; font-size: 0.95rem; letter-spacing: 0.5px;">{{ ticket.status.name }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="meta-row" style="margin-bottom: 2.5rem;">
+                        <div class="meta-icon"><i class="bi bi-building"></i></div>
+                        <div class="meta-label-text">Departamento</div>
+                        <span class="badge rounded-pill" style="background-color: {{ ticket.department.color }}20; color: {{ ticket.department.color }}; font-weight: 600; padding: 6px 14px;">{{ ticket.department.name }}</span>
+                    </div>
+
+                    <div class="meta-row" style="margin-bottom: 2.5rem;">
+                        <div class="meta-icon"><i class="bi bi-calendar4-event"></i></div>
+                        <div class="meta-label-text">Data de entrega</div>
+                        <span class="badge bg-light text-secondary border rounded-pill px-3 py-2">{% if ticket.due_date %}{{ ticket.due_date|date:"d \d\e F Y" }}{% else %}-{% endif %}</span>
+                    </div>
+
+                    <div class="meta-row">
+                        <div class="meta-icon"><i class="bi bi-people"></i></div>
+                        <div class="meta-label-text">Atribuído a</div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            {% for r in ticket.responsibles.all %}
+                                <div class="d-flex align-items-center gap-2 bg-white border px-3 py-1 rounded-pill">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center small fw-bold" style="width: 20px; height: 20px;">
+                                        {{ r.first_name|first }}
+                                    </div>
+                                    <span class="text-dark fw-medium small">{{ r.first_name }}</span>
+                                </div>
+                            {% empty %}
+                                <span class="text-muted small fst-italic">Aguardando técnico</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <div class="d-flex align-items-center gap-2 mb-2 text-secondary small fw-bold"><i class="bi bi-file-text"></i> DESCRIÇÃO</div>
+                    <div class="desc-box">{{ ticket.description|linebreaks|default:"Sem descrição." }}</div>
+                </div>
+
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-3 text-secondary small fw-bold"><i class="bi bi-paperclip"></i> ANEXOS</div>
+                    <div class="d-flex gap-3 flex-wrap">
+                        {% for attach in ticket.attachments.all %}
+                        <a href="{{ attach.file.url }}" target="_blank" class="text-decoration-none">
+                            <div class="border rounded p-3 d-flex align-items-center gap-3 bg-white shadow-sm" style="min-width: 160px; transition: transform 0.2s;">
+                                <i class="bi bi-file-earmark text-primary fs-5"></i>
+                                <div class="small fw-bold text-dark text-truncate" style="max-width: 110px;" title="{{ attach.filename }}">{{ attach.filename }}</div>
+                            </div>
+                        </a>
+                        {% empty %}
+                            <span class="text-muted small fst-italic">Nenhum anexo registrado neste chamado.</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 sidebar-panel position-relative">
+                <span class="id-float">ID #{{ ticket.id }}</span>
+                <div>
+                    <button class="accordion-btn" type="button" data-bs-toggle="collapse" data-bs-target="#detailsCollapse">
+                        <span>Detalhes Técnicos</span><i class="bi bi-chevron-down chevron"></i>
+                    </button>
+                    <div class="collapse show" id="detailsCollapse">
+                        <div class="accordion-content">
+                            <div class="jira-item"><span class="jira-label">Ação / Tipo</span><div class="jira-value text-primary">{{ ticket.action.name|default:"-" }}</div></div>
+                            <div class="jira-item"><span class="jira-label">Item Relacionado</span><div class="jira-value"><i class="bi bi-box-seam text-muted me-1"></i>{{ ticket.item.name|default:"-" }}</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <button class="accordion-btn" type="button" data-bs-toggle="collapse" data-bs-target="#locationCollapse">
+                        <span>Localização</span><i class="bi bi-chevron-down chevron"></i>
+                    </button>
+                    <div class="collapse" id="locationCollapse">
+                        <div class="accordion-content">
+                            <div class="jira-item"><span class="jira-label">Unidade</span><div class="jira-value">{{ ticket.unit.name|default:"-" }}</div></div>
+                            <div class="jira-item"><span class="jira-label">Ambiente</span><div class="jira-value fw-bold">{{ ticket.environment.identifier|default:"-" }}</div></div>
+                            <div class="row">
+                                <div class="col-6 jira-item"><span class="jira-label">Bloco</span><div class="jira-value">{{ ticket.environment.block|default:"-" }}</div></div>
+                                <div class="col-6 jira-item"><span class="jira-label">Andar</span><div class="jira-value">{{ ticket.environment.floor|default:"-" }}</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-4 bg-white border-top d-flex justify-content-end align-items-center">
+            <a href="{% url 'generate_os' ticket.id %}" target="_blank" class="text-decoration-none"><button class="btn-create-os shadow-sm">CRIAR OS</button></a>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-lg-8">
+            <div class="section-card">
+                <div class="section-card-header">
+                    <i class="bi bi-clock-history me-2"></i> Histórico de Atividades
+                </div>
+                
+                <div class="timeline-wrapper">
+                    {% for followup in ticket.follow_ups.all %}
+                        <div class="timeline-item">
+                            <div class="timeline-avatar">
+                                {{ followup.user.first_name|first|upper }}
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-header">
+                                    <div class="d-flex align-items-center">
+                                        <span class="timeline-user">{{ followup.user.get_full_name|default:followup.user.username }}</span>
+                                        {% if followup.new_status %}
+                                            <span class="status-badge">Alterou para {{ followup.new_status.name }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="timeline-date">{{ followup.created_at|date:"d/m/Y \à\s H:i" }}</span>
+                                </div>
+                                <div class="timeline-body">
+                                    {{ followup.message|linebreaksbr }}
+                                </div>
+                                {% if followup.attachment %}
+                                    <div class="mt-2 pt-2 border-top border-light">
+                                        <a href="{{ followup.attachment.url }}" target="_blank" class="text-decoration-none small fw-bold text-primary">
+                                            <i class="bi bi-paperclip me-1"></i> {{ followup.attachment.name }}
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-chat-dots fs-1 text-muted opacity-25 mb-2 d-block"></i>
+                            <span class="text-muted small">Nenhum registro no histórico.</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            
+            <div class="add-action-bar" data-bs-toggle="collapse" data-bs-target="#actionFormCollapse" aria-expanded="false" aria-controls="actionFormCollapse">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-plus-circle-fill text-primary me-2 fs-5"></i>
+                    <span>Adicionar Acompanhamento / Atualizar</span>
+                </div>
+                <i class="bi bi-chevron-down chevron"></i>
+            </div>
+
+            <div class="collapse" id="actionFormCollapse">
+                <div class="reply-card">
+                    <form method="post" action="{% url 'add_followup' ticket.id %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-group-label">Mensagem</label>
+                            <textarea name="message" class="action-textarea" placeholder="Digite seu comentário ou relatório técnico aqui..." required></textarea>
+                        </div>
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-group-label">Novo Status</label>
+                                <select name="new_status" class="team-select" style="height: auto;">
+                                    <option value="">-- Manter Atual ({{ ticket.status.name }}) --</option>
+                                    {% for status in all_status %}
+                                        {% if status.name == 'Concluído' or status.name == 'Cancelado' %}
+                                            {% if is_admin %}
+                                                <option value="{{ status.id }}">{{ status.name }}</option>
+                                            {% endif %}
+                                        {% else %}
+                                            <option value="{{ status.id }}">{{ status.name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-group-label">Anexar Arquivo</label>
+                                <input type="file" name="attachment" class="team-select" style="height: auto;">
+                            </div>
+                        </div>
+
+                        <div class="clearfix">
+                            <button type="submit" class="btn-update shadow-sm">
+                                <i class="bi bi-send me-2"></i>Enviar Atualização
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const btnShare = document.getElementById("btnShare");
+        
+        if (btnShare) {
+            btnShare.addEventListener("click", function() {
+                const urlToCopy = this.getAttribute("data-url");
+                navigator.clipboard.writeText(urlToCopy).then(() => {
+                    const originalClass = this.className;
+                    this.className = "bi bi-check2 text-success toolbar-icon fw-bold";
+                    this.title = "Link copiado!";
+                    setTimeout(() => {
+                        this.className = originalClass;
+                        this.title = "Copiar link do chamado";
+                    }, 2000);
+                }).catch(err => {
+                    console.error("Erro ao copiar o link: ", err);
+                    alert("Não foi possível copiar o link.");
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

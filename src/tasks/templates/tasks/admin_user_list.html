@@ -1,0 +1,218 @@
+{% extends 'base_internal.html' %}
+{% load static %}
+
+{% block content %}
+<div class="px-2 px-md-4 py-3 py-md-4" style="background-color: #f8f9fa; min-height: 100vh;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <a href="{% url 'admin_panel' %}" class="text-decoration-none text-muted small fw-bold mb-2 d-inline-block">
+                <i class="bi bi-arrow-left me-1"></i> VOLTAR PARA ADMIN
+            </a>
+            <h2 class="fw-bold text-dark m-0">Gestão de Pessoas (Usuários)</h2>
+        </div>
+        <button class="btn btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="bi bi-person-plus-fill me-2"></i> Novo Usuário
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 bg-white text-nowrap">
+                <thead class="bg-light text-secondary small text-uppercase" style="letter-spacing: 0.5px;">
+                    <tr>
+                        <th class="py-3 px-4 border-bottom-0">Nome / E-mail</th>
+                        <th class="py-3 px-4 border-bottom-0">Login (Username)</th>
+                        <th class="py-3 px-4 border-bottom-0">Matrícula & Setor</th>
+                        <th class="py-3 px-4 border-bottom-0">Nível de Acesso</th>
+                        <th class="py-3 px-4 border-bottom-0">Status</th>
+                        <th class="py-3 px-4 border-bottom-0 text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for u in users %}
+                    <tr>
+                        <td class="py-3 px-4">
+                            <div class="fw-bold text-dark">{{ u.get_full_name|default:"Sem nome" }}</div>
+                            <div class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ u.email|default:"Sem e-mail" }}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="badge bg-light text-dark border">{{ u.username }}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="fw-medium text-dark small">{{ u.info.matricula|default:"-" }}</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">
+                                {% for g in u.groups.all %}
+                                    {% if 'Administrativo' not in g.name %}
+                                        <i class="bi bi-building me-1"></i>{{ g.name }}
+                                    {% endif %}
+                                {% empty %}
+                                    Sem setor vinculado
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if u.is_superuser %}
+                                <span class="badge bg-danger">Administrativo</span>
+                            {% elif u.is_staff %}
+                                <span class="badge bg-dark"><i class="bi bi-shield-check me-1"></i> Staff (Técnico)</span>
+                            {% elif 'Administrativo' in u.groups.all|stringformat:"s" %}
+                                <span class="badge bg-dark"><i class="bi bi-shield-check me-1"></i> Administrador</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Solicitante</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if u.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-check-circle me-1"></i>Ativo</span>
+                            {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger"><i class="bi bi-x-circle me-1"></i>Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-end">
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal_{{ u.id }}">
+                                <i class="bi bi-pencil-square me-1"></i> Editar
+                            </button>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="editUserModal_{{ u.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow">
+                                <form method="post" action="{% url 'admin_edit_user' u.id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-header bg-light border-bottom-0">
+                                        <h5 class="modal-title fw-bold text-dark">Editar Usuário: {{ u.username }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+                                        
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold text-muted">NOME COMPLETO</label>
+                                                <input type="text" name="first_name" class="form-control" value="{{ u.first_name }}">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold text-muted">E-MAIL</label>
+                                                <input type="email" name="email" class="form-control" value="{{ u.email }}">
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold text-muted">MATRÍCULA*</label>
+                                                <input type="text" name="matricula" class="form-control border-primary" value="{{ u.info.matricula|default:'' }}" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold text-muted">DEPARTAMENTO / SETOR*</label>
+                                                <select name="department" class="form-select border-primary" required>
+                                                    <option value="">Selecione...</option>
+                                                    {% for dept in departments %}
+                                                        <option value="{{ dept.id }}" 
+                                                            {% for g in u.groups.all %} {% if g.name == dept.name %}selected{% endif %} {% endfor %}>
+                                                            {{ dept.name }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="form-label small fw-bold text-muted">REDEFINIR SENHA (OPCIONAL)</label>
+                                            <input type="password" name="password" class="form-control" placeholder="Deixe em branco para manter a atual">
+                                        </div>
+
+                                        <div class="form-check form-switch d-flex align-items-center mb-2">
+                                            <input class="form-check-input fs-5" type="checkbox" role="switch" name="is_active" id="editActive_{{ u.id }}" {% if u.is_active %}checked{% endif %}>
+                                            <div class="ms-3">
+                                                <label class="form-check-label fw-bold text-dark d-block" for="editActive_{{ u.id }}">Conta Ativa</label>
+                                                <small class="text-muted">Permite que o usuário faça login.</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-top-0 bg-light">
+                                        <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary fw-bold">Salvar Alterações</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted fst-italic">Nenhum usuário cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form method="post" action="{% url 'admin_user_list' %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-light border-bottom-0">
+                        <h5 class="modal-title fw-bold text-dark">Cadastrar Novo Usuário</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">NOME DE USUÁRIO (LOGIN)*</label>
+                                <input type="text" name="username" class="form-control" placeholder="ex: pedro.silva" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">SENHA INICIAL*</label>
+                                <input type="password" name="password" class="form-control" placeholder="Defina uma senha" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">NOME COMPLETO</label>
+                                <input type="text" name="first_name" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">E-MAIL</label>
+                                <input type="email" name="email" class="form-control" placeholder="exemplo@umj.edu.br">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">MATRÍCULA*</label>
+                                <input type="text" name="matricula" class="form-control border-primary" placeholder="Nº da Matrícula" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">DEPARTAMENTO / SETOR*</label>
+                                <select name="department" class="form-select border-primary" required>
+                                    <option value="">Selecione...</option>
+                                    {% for dept in departments %}
+                                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch d-flex align-items-center mb-2">
+                            <input class="form-check-input fs-5" type="checkbox" role="switch" name="is_active" id="newActive" checked>
+                            <div class="ms-3">
+                                <label class="form-check-label fw-bold text-dark d-block" for="newActive">Conta Ativa</label>
+                                <small class="text-muted">Permite que o usuário faça login.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 bg-light">
+                        <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Criar Usuário</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

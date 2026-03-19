@@ -1,0 +1,102 @@
+{% extends 'base_internal.html' %}
+{% block content %}
+<div class="px-2 px-md-4 py-3 py-md-4" style="background-color: #f8f9fa; min-height: 100vh;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <a href="{% url 'admin_panel' %}" class="text-decoration-none text-muted small fw-bold mb-2 d-inline-block">
+                <i class="bi bi-arrow-left me-1"></i> VOLTAR PARA ADMIN
+            </a>
+            <h2 class="fw-bold text-dark m-0">Gestão de Itens</h2>
+        </div>
+        <button class="btn btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+            <i class="bi bi-plus-circle me-2"></i> Novo Item
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 bg-white text-nowrap">
+            <thead class="bg-light text-secondary small text-uppercase">
+                <tr>
+                    <th class="py-3 px-4">Nome do Item</th>
+                    <th class="py-3 px-4">Identificador (Sigla)</th>
+                    <th class="py-3 px-4 text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td class="py-3 px-4 fw-bold text-dark">{{ item.name }}</td>
+                    <td class="py-3 px-4"><span class="badge bg-light text-dark border">{{ item.identifier }}</span></td>
+                    <td class="py-3 px-4 text-end">
+                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal_{{ item.id }}">
+                            <i class="bi bi-pencil-square me-1"></i> Editar
+                        </button>
+                    </td>
+                </tr>
+
+                <div class="modal fade" id="editModal_{{ item.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow">
+                            <form method="post" action="{% url 'admin_edit_item' item.id %}">
+                                {% csrf_token %}
+                                <div class="modal-header bg-light">
+                                    <h5 class="modal-title fw-bold">Editar Item</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">NOME DO ITEM*</label>
+                                        <input type="text" name="name" class="form-control" value="{{ item.name }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">IDENTIFICADOR*</label>
+                                        <input type="text" name="identifier" class="form-control" value="{{ item.identifier }}" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light border-top-0">
+                                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary fw-bold">Salvar Alterações</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <tr><td colspan="3" class="text-center py-5 text-muted fst-italic">Nenhum item cadastrado.</td></tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form method="post" action="{% url 'admin_item_list' %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Cadastrar Novo Item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">NOME DO ITEM*</label>
+                            <input type="text" name="name" class="form-control" placeholder="Ex: Computador Desktop" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">IDENTIFICADOR*</label>
+                            <input type="text" name="identifier" class="form-control" placeholder="Ex: pc_desktop" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top-0">
+                        <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Criar Item</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

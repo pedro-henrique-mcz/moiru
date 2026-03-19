@@ -1,0 +1,32 @@
+services:
+  db:
+    container_name: moiru_db
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    build: . 
+    image: moiru_umj:v0
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - app_media:/usr/src/app/src/media
+      - app_static:/usr/src/app/src/static
+
+volumes:
+  app_media:
+  app_static:
+  db_data:
+

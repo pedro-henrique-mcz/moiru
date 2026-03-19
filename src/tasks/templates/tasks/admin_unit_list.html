@@ -1,0 +1,95 @@
+{% extends 'base_internal.html' %}
+
+{% block content %}
+<style>
+    /* Design de linha clicável estilo botão */
+    .table-row-clickable { cursor: pointer; transition: background-color 0.1s ease; }
+    .table-row-clickable:hover td { background-color: #f8fafc !important; }
+    .table-row-clickable:active td { background-color: #f1f5f9 !important; }
+</style>
+
+<div class="px-2 px-md-4 py-3 py-md-4" style="background-color: #f8f9fa; min-height: 100vh;">
+    
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'admin_panel' %}" class="text-decoration-none">Admin</a></li>
+            <li class="breadcrumb-item active">Gestão de Unidades</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h3 class="fw-semibold m-0" style="color: #111827;">Gestão de Unidades</h3>
+        <button class="btn btn-dark px-4 shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+            <i class="bi bi-plus-lg me-2"></i> Adicionar Unidade
+        </button>
+    </div>
+
+    <div class="bg-white border rounded-4 overflow-hidden shadow-sm">
+        <div class="table-responsive">
+            <table class="table mb-0 text-nowrap align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4 py-3 text-uppercase small fw-bold text-muted" style="width: 100px;">ID</th>
+                    <th class="py-3 text-uppercase small fw-bold text-muted">Unidade</th>
+                    <th class="py-3 text-uppercase small fw-bold text-muted">Sigla</th>
+                    <th class="py-3 text-uppercase small fw-bold text-muted text-end pe-4">Localização</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for unit in units %}
+                <tr class="table-row-clickable" onclick="window.location='{% url 'admin_unit_manage' unit.id %}'">
+                    <td class="ps-4 py-3 text-muted fw-semibold">#{{ unit.id|stringformat:"02d" }}</td>
+                    <td class="py-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width: 10px; height: 10px; border-radius: 50%; background-color: {{ unit.color }};"></div>
+                            <span class="fw-bold" style="color: #111827;">{{ unit.name }}</span>
+                        </div>
+                    </td>
+                    <td class="py-3 text-muted">{{ unit.identifier|upper }}</td>
+                    <td class="py-3 text-muted small text-end pe-4">{{ unit.city|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center py-5 text-muted">Nenhuma unidade cadastrada.</td></tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form action="{% url 'admin_add_unit' %}" method="POST" class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            {% csrf_token %}
+            <div class="modal-header bg-light border-0">
+                <h5 class="fw-bold modal-title">Nova Unidade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label small fw-bold text-muted">NOME DA UNIDADE*</label>
+                        <input type="text" name="name" class="form-control" placeholder="Ex: Sede Principal" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted">SIGLA*</label>
+                        <input type="text" name="identifier" class="form-control" placeholder="Ex: SEDE" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">CIDADE</label>
+                        <input type="text" name="city" class="form-control" placeholder="Sua cidade">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">COR DE DESTAQUE</label>
+                        <input type="color" name="color" class="form-control form-control-color w-100" value="#111827">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-dark fw-bold px-4">Salvar Unidade</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

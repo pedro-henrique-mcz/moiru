@@ -1,0 +1,109 @@
+{% extends 'base_internal.html' %} 
+
+{% block title %}Editar Chamado #{{ ticket.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white py-3">
+            <h4 class="mb-0 fs-5 fw-bold"><i class="bi bi-pencil-square me-2"></i>Editar Ordem de Serviço #{{ ticket.id }}</h4>
+        </div>
+        <div class="card-body p-4">
+            
+            <form method="POST" id="editTicketForm" enctype="multipart/form-data" data-url="{% url 'ajax_load_envs' %}">
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    {% for field in form %}
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label fw-bold text-secondary small text-uppercase mb-1">{{ field.label }}</label>
+                            
+                            {{ field }}
+                            
+                            {% if field.help_text %}
+                                <div class="form-text text-muted small mt-1">{{ field.help_text }}</div>
+                            {% endif %}
+                            
+                            {% for error in field.errors %}
+                                <div class="text-danger small fw-bold mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <hr class="my-4 text-muted">
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'ticket_detail' ticket.id %}" class="btn btn-light border fw-bold text-secondary px-4">Cancelar</a>
+                    <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm"><i class="bi bi-save me-2"></i>Salvar Alterações</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputs = document.querySelectorAll(".card-body input, .card-body select, .card-body textarea");
+        inputs.forEach(input => {
+            // Evita estilizar checkboxes e radios de forma errada
+            if (input.type === "checkbox" || input.type === "radio") {
+                input.classList.add("form-check-input");
+                input.parentElement.classList.add("form-check");
+            } else if (input.tagName === "SELECT") {
+                input.classList.add("form-select");
+            } else {
+                input.classList.add("form-control");
+            }
+        });
+
+        // Vacina Anti-Bloqueio (garante que o envio ocorra mesmo se campos forem bloqueados por outros scripts)
+        const form = document.getElementById("editTicketForm");
+        if(form) {
+            form.addEventListener("submit", function() {
+                inputs.forEach(input => {
+                    input.disabled = false;
+                });
+            });
+        }
+
+        // ==========================================
+        // ALTERAÇÃO 2: AJAX - Mudar Ambientes ao trocar de Unidade
+        // ==========================================
+        const unitSelect = document.getElementById("id_unit");
+        const envSelect = document.getElementById("id_environment");
+        
+        if (unitSelect && envSelect && form) {
+            unitSelect.addEventListener("change", function() {
+                const unitId = this.value;
+                const url = form.getAttribute("data-url"); // Pega a URL invisível do formulário
+
+                // Esvazia o campo de ambientes e mostra carregando
+                envSelect.innerHTML = '<option value="">Carregando...</option>';
+
+                if (unitId) {
+                    // Vai no servidor buscar os ambientes da Unidade escolhida
+                    fetch(`${url}?unit_id=${unitId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            envSelect.innerHTML = '<option value="">Selecione o Ambiente</option>';
+                            // Preenche o campo com os novos ambientes retornados do banco
+                            data.forEach(env => {
+                                let option = new Option(env.name, env.id);
+                                envSelect.add(option);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Erro ao buscar ambientes:', error);
+                            envSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+                        });
+                } else {
+                    // Se a pessoa deixar a unidade em branco
+                    envSelect.innerHTML = '<option value="">Selecione a Unidade primeiro</option>';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

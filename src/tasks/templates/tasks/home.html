@@ -1,0 +1,59 @@
+{% extends 'base_internal.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid p-4 d-flex flex-column" style="min-height: 85vh;">
+    
+    <div class="row flex-grow-1">
+        
+        <div class="col-12 col-lg-7 d-flex flex-column justify-content-center py-4">
+            
+            <div class="mb-5 ps-2">
+                <h1 class="fw-bold" style="color: #1F2937; font-size: clamp(2rem, 3.5vw, 3rem); letter-spacing: -1px; line-height: 1.2;">
+                    Olá, {{ usuario.first_name|default:usuario.username }}!
+                </h1>
+                <p class="text-muted fs-5 fw-medium mt-1">
+                    {{ hoje|date:"l, d \d\e F" }} | {{ hoje|date:"H:i" }}
+                </p>
+            </div>
+
+            <div class="d-flex align-items-center p-3 w-100 mb-4 shadow-sm" 
+                 style="background-color: #FFF8E1; border-radius: 4px; border-left: 5px solid #F59E0B;">
+                
+                <div class="d-flex align-items-center justify-content-center me-3 ms-2">
+                    <i class="bi bi-exclamation-triangle-fill fs-4" style="color: #D97706;"></i>
+                </div>
+                
+                <div>
+                    <strong class="d-block mb-1" style="color: #92400E; font-size: 1.1rem;">Ambiente em Versão Beta</strong>
+                    <span style="color: #B45309; font-size: 0.95rem; line-height: 1.4;">
+                        O sistema está passando por melhorias. Funcionalidades podem mudar sem aviso prévio.
+                    </span>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-start p-4 w-100 shadow-sm bg-white" 
+                 style="border-radius: 4px; border-left: 5px solid #526CB6;"> <div class="me-3 mt-1 ms-1">
+                    <i class="bi bi-info-circle-fill" style="color: #526CB6; font-size: 1.3rem;"></i>
+                </div>
+                
+                <div>
+                    <h5 class="fw-bold mb-2" style="color: #374151;">Sistema de Chamados Administrativos</h5>
+                    <p class="mb-0" style="color: #6B7280; font-size: 1rem; line-height: 1.5;">
+                        Centralize a gestão de demandas internas da UMJ. Utilize este painel para abrir solicitações, acompanhar status e interagir com técnicos.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-5 d-none d-lg-flex align-items-end justify-content-start ps-lg-5 position-relative overflow-hidden">
+            <img src="{% static 'img/home_flatdesign.png' %}" 
+                 alt="Ilustração Home" 
+                 class="img-fluid mb-n3"
+                 style="max-width: 90%; height: auto; object-fit: contain;">
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

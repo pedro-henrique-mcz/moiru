@@ -1,0 +1,344 @@
+{% extends 'base_internal.html' %}
+
+{% block content %}
+
+<style>
+    /* --- DESIGN SYSTEM REFINADO --- */
+    .dashboard-wrapper { background-color: transparent; padding-top: 10px; }
+    
+    /* CARDS DE ESTATÍSTICA */
+    a.stat-card-link { text-decoration: none; color: inherit; display: block; height: 100%; }
+    .stat-card { 
+        background-color: #FFFFFF; 
+        border: 1px solid #F3F4F6; 
+        border-radius: 12px; 
+        padding: 16px 20px; 
+        position: relative; 
+        transition: all 0.2s ease-in-out; 
+        height: 100%; 
+        opacity: 0.65; 
+        transform: scale(0.98);
+    }
+    .stat-card:hover { border-color: #E5E7EB; opacity: 1; transform: scale(1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); cursor: pointer; }
+    .stat-card.active { 
+        background-color: #FFFFFF; 
+        border: 1px solid #D1D5DB; 
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); 
+        opacity: 1; 
+        transform: scale(1);
+        z-index: 10; 
+    }
+    
+    .stat-label { font-size: 0.75rem; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: block; }
+    .stat-value { font-size: 2.2rem; font-weight: 700; color: #111827; line-height: 1; margin-bottom: 12px; display: block; }
+    .stat-trend { font-size: 0.75rem; color: #9CA3AF; display: flex; align-items: center; gap: 4px; font-weight: 500; }
+    .trend-positive { color: #10B981; } .trend-negative { color: #EF4444; }
+    
+    .stat-icon { position: absolute; top: 24px; right: 24px; font-size: 1.25rem; color: #E5E7EB; transition: color 0.2s; }
+    .stat-card.active .stat-icon { color: #9CA3AF; }
+    .text-soft-danger { color: #be123c; } .stat-card.active .icon-soft-danger { color: #fda4af; }
+
+    /* --- BARRA DE FERRAMENTAS (h-42) --- */
+    .h-42 { height: 42px !important; display: flex; align-items: center; justify-content: center; }
+    .form-control-clean { border-color: #E5E7EB; background-color: white; box-shadow: none !important; height: 100%; }
+    .form-control-clean:focus { border-color: #9CA3AF; }
+    .input-group-text-clean { height: 100%; background: white; border-color: #E5E7EB; }
+
+    /* Toggle Meus/Todos */
+    .btn-toggle { height: 100%; padding: 0 16px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; border: none; transition: all 0.2s; width: 100%; }
+    .btn-toggle.active { background-color: #F3F4F6; color: #111827; font-weight: 700; }
+    .btn-toggle.inactive { background-color: #FFFFFF; color: #6B7280; }
+    .btn-toggle:hover { background-color: #F9FAFB; color: #111827; }
+
+    /* Botões de Ação */
+    .btn-white-filter { background-color: #FFFFFF; color: #374151; border: 1px solid #E5E7EB; border-radius: 6px; font-weight: 600; transition: all 0.2s; padding: 0 16px; gap: 8px; width: 100%; }
+    .btn-white-filter:hover { background-color: #F9FAFB; border-color: #D1D5DB; }
+    
+    .btn-black-tall { background-color: #111827; color: white; border: none; border-radius: 6px; font-weight: 600; transition: background 0.2s; padding: 0 20px; width: 100%; }
+    .btn-black-tall:hover { background-color: #000000; color: white; }
+
+    /* Filtro Chips */
+    .active-filter-chip { display: inline-flex; align-items: center; background-color: #EFF6FF; color: #2563EB; font-size: 0.8rem; font-weight: 600; padding: 0 12px; border-radius: 50px; border: none; height: 32px; }
+    .chip-remove { margin-left: 8px; cursor: pointer; color: #60A5FA; font-size: 1rem; display: flex; align-items: center; }
+    .chip-remove:hover { color: #2563EB; }
+
+    /* --- TABELA E INTERATIVIDADE --- */
+    .table-container { background: white; border-radius: 0; }
+    .table-ref th { font-size: 0.75rem; text-transform: uppercase; color: #6B7280; font-weight: 700; border-bottom: 1px solid #E5E7EB; padding: 14px 24px; background-color: #F9FAFB; letter-spacing: 0.05em; }
+    .table-ref td { padding: 14px 24px; border-bottom: 1px solid #F3F4F6; vertical-align: middle; font-size: 0.9rem; color: #111827; }
+
+    /* HOVER NA LINHA COMO BOTÃO */
+    .table-row-clickable { cursor: pointer; transition: background-color 0.1s ease; }
+    .table-row-clickable:hover td { background-color: #f5f5f5 !important; }
+    .table-row-clickable:active td { background-color: #eeeeee !important; }
+
+    /* Células e Badges */
+    .cell-id { color: #6B7280; font-weight: 600; font-size: 0.85rem; }
+    .cell-title { color: #111827; font-weight: 700; font-size: 0.95rem; }
+    .badge-dept-outline { background-color: transparent; border: 1px solid #D1D5DB; color: #4B5563; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 500; display: inline-block; }
+    .badge-status-solid { color: white; padding: 4px 16px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; display: inline-block; min-width: 80px; text-align: center; }
+    .date-overdue { color: #DC2626; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
+    .date-normal { color: #374151; font-size: 0.85rem; }
+
+    /* --- PAGINAÇÃO --- */
+    .pagination-umj .page-item .page-link {
+        border: 1px solid #E5E7EB; background: #FFFFFF; color: #6B7280; font-weight: 600;
+        width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+        border-radius: 4px; margin-right: 6px; transition: all 0.2s;
+    }
+    .pagination-umj .page-item.active .page-link { background-color: #111827; color: #FFFFFF; border-color: #111827; }
+    .pagination-umj .page-item .page-link:hover { background-color: #F9FAFB; color: #111827; border-color: #D1D5DB; }
+
+    .custom-dropdown-menu { border: 1px solid #E5E7EB; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 12px; padding: 16px; min-width: 300px; margin-top: 8px; }
+    .filter-section-title { font-size: 0.7rem; text-transform: uppercase; color: #9CA3AF; font-weight: 700; margin-bottom: 8px; display: block; letter-spacing: 0.05em; }
+
+    /* Ajustes específicos mobile */
+    @media (max-width: 768px) {
+        .stat-card { padding: 12px; }
+        .stat-value { font-size: 1.8rem; }
+        .stat-icon { top: 16px; right: 16px; font-size: 1rem; }
+    }
+</style>
+
+<div class="dashboard-wrapper px-2 px-md-4 pb-4">
+
+    <div class="row g-2 g-md-3 mb-3">
+        <div class="col-6 col-lg-3">
+            <a href="?quick_filter=total" class="stat-card-link">
+                <div class="stat-card {% if quick_filter == 'total' %}active{% endif %}">
+                    <span class="stat-label">Total</span>
+                    <span class="stat-value">{{ stats.total }}</span>
+                    <div class="stat-trend text-truncate">
+                        {% if stats.trend_total.value != 0 %}
+                            <span class="{% if stats.trend_total.positive %}trend-positive{% else %}trend-negative{% endif %}">
+                                {% if stats.trend_total.positive %}+{% endif %}{{ stats.trend_total.abs_value }}%
+                            </span> <span class="ms-1 d-none d-sm-inline">vs. 30 dias</span>
+                        {% else %} <span>Estável</span> {% endif %}
+                    </div>
+                    <i class="bi bi-layers-fill stat-icon"></i>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a href="?quick_filter=solucionados" class="stat-card-link">
+                <div class="stat-card {% if quick_filter == 'solucionados' %}active{% endif %}">
+                    <span class="stat-label">Concluídos</span>
+                    <span class="stat-value">{{ stats.solucionados }}</span>
+                    <div class="stat-trend text-truncate">
+                        {% if stats.trend_solucionados.value != 0 %}
+                            <span class="{% if stats.trend_solucionados.positive %}trend-positive{% else %}trend-negative{% endif %}">
+                                {% if stats.trend_solucionados.positive %}+{% endif %}{{ stats.trend_solucionados.abs_value }}%
+                            </span> <span class="ms-1 d-none d-sm-inline">vs. 30 dias</span>
+                        {% else %} <span>Estável</span> {% endif %}
+                    </div>
+                    <i class="bi bi-check-circle-fill stat-icon"></i>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a href="?quick_filter=andamento" class="stat-card-link">
+                <div class="stat-card {% if quick_filter == 'andamento' %}active{% endif %}">
+                    <span class="stat-label">Em Andamento</span>
+                    <span class="stat-value">{{ stats.andamento }}</span>
+                    <div class="stat-trend text-truncate">
+                        {% if stats.trend_andamento.value != 0 %}
+                            <span class="{% if stats.trend_andamento.positive %}trend-positive{% else %}trend-negative{% endif %}">
+                                {% if stats.trend_andamento.positive %}+{% endif %}{{ stats.trend_andamento.abs_value }}%
+                            </span> <span class="ms-1 d-none d-sm-inline">vs. 30 dias</span>
+                        {% else %} <span>Estável</span> {% endif %}
+                    </div>
+                    <i class="bi bi-hourglass-split stat-icon"></i>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a href="?quick_filter=atrasados" class="stat-card-link">
+                <div class="stat-card {% if quick_filter == 'atrasados' %}active{% endif %}">
+                    <span class="stat-label text-soft-danger">Atrasados</span>
+                    <span class="stat-value text-soft-danger">{{ stats.atrasados }}</span>
+                    <div class="stat-trend text-truncate">
+                        {% if stats.trend_atrasados.value != 0 %}
+                            <span class="{% if stats.trend_atrasados.positive %}trend-negative{% else %}trend-positive{% endif %}">
+                                {% if stats.trend_atrasados.positive %}+{% endif %}{{ stats.trend_atrasados.abs_value }}%
+                            </span> <span class="ms-1 d-none d-sm-inline">vs. 30 dias</span>
+                        {% else %} <span>Estável</span> {% endif %}
+                    </div>
+                    <i class="bi bi-exclamation-circle-fill stat-icon icon-soft-danger"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <form method="GET" id="mainFilterForm" class="mb-3">
+        <input type="hidden" name="quick_filter" value="{{ quick_filter }}">
+        <input type="hidden" name="scope" id="scopeInput" value="{{ current_scope }}">
+
+        <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+            
+            <div class="d-flex flex-column flex-md-row gap-3 align-items-stretch align-items-md-center flex-grow-1">
+                
+                <div class="input-group h-42 w-100" style="max-width: 400px;">
+                    <span class="input-group-text input-group-text-clean ps-3">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ filters.q }}" class="form-control form-control-clean border-start-0 ps-0" placeholder="Buscar chamados..." onchange="document.getElementById('mainFilterForm').submit()">
+                </div>
+
+                <div class="btn-group border rounded-2 h-42 d-flex" role="group" style="border-color: #E5E7EB; overflow: hidden; min-width: 200px;">
+                    <button type="button" onclick="setScope('me')" class="btn-toggle {% if current_scope == 'me' %}active{% else %}inactive{% endif %}">Meus</button>
+                    <div class="border-end" style="border-color: #E5E7EB;"></div>
+                    <button type="button" onclick="setScope('all')" class="btn-toggle {% if current_scope == 'all' %}active{% else %}inactive{% endif %}">Todos</button>
+                </div>
+
+                <div class="vr mx-1 text-muted opacity-25 h-42 d-none d-md-block"></div>
+
+                {% if active_filters.statuses or active_filters.departments %}
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        {% for status in active_filters.statuses %}
+                            <span class="active-filter-chip">{{ status.name }} <span class="chip-remove" onclick="removeFilter('status', '{{ status.id }}')">×</span></span>
+                        {% endfor %}
+                        {% for dept in active_filters.departments %}
+                            <span class="active-filter-chip">{{ dept.name|truncatechars:15 }} <span class="chip-remove" onclick="removeFilter('department', '{{ dept.id }}')">×</span></span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch">
+                <div class="dropdown">
+                    <button class="btn btn-white-filter h-42 w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                    <div class="dropdown-menu custom-dropdown-menu dropdown-menu-end w-100 w-sm-auto" aria-labelledby="dropdownMenuButton" onclick="event.stopPropagation()">
+                        <div class="mb-3">
+                            <span class="filter-section-title">Por Status</span>
+                            {% for status in dropdown_data.all_statuses %}
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="status" value="{{ status.id }}" id="status_{{ status.id }}" {% if status.id in filters.selected_statuses %}checked{% endif %}>
+                                <label class="form-check-label small text-secondary" for="status_{{ status.id }}">{{ status.name }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-4">
+                            <span class="filter-section-title">Por Departamento</span>
+                            <div style="max-height: 150px; overflow-y: auto;">
+                                {% for dept in dropdown_data.all_departments %}
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" type="checkbox" name="department" value="{{ dept.id }}" id="dept_{{ dept.id }}" {% if dept.id in filters.selected_depts %}checked{% endif %}>
+                                    <label class="form-check-label small text-secondary" for="dept_{{ dept.id }}">{{ dept.name }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-2">
+                            <a href="?scope={{ current_scope }}&quick_filter={{ quick_filter }}" class="text-danger small text-decoration-none fw-bold px-2">Limpar</a>
+                            <button type="submit" class="btn btn-black-tall h-auto py-2 px-4" style="font-size: 0.85rem; width: auto;">Aplicar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{% url 'create_ticket' %}" class="btn btn-black-tall h-42 gap-2 text-decoration-none">
+                    <i class="bi bi-plus-lg"></i> Novo Chamado
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <div class="table-container border-top border-bottom" style="border-color: #E5E7EB;">
+        <div class="table-responsive">
+            <table class="table table-ref w-100 mb-0 text-nowrap align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Assunto</th>
+                        <th class="d-none d-md-table-cell">Solicitante</th>
+                        
+                        <th>Local / Ambiente</th>
+                        
+                        <th>Status</th>
+                        <th>Data <i class="bi bi-caret-down-fill small ms-1 text-muted"></i></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in page_obj %}
+                    <tr class="table-row-clickable" onclick="window.location='{% url 'ticket_detail' ticket.id %}'">
+                        <td class="ps-4 cell-id">#{{ ticket.id|stringformat:"02d" }}</td>
+                        <td class="cell-title">{{ ticket.title|truncatechars:45 }}</td>
+                        <td class="d-none d-md-table-cell">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center border text-secondary fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem; border-color: #E5E7EB; background-color: #F9FAFB;">
+                                    {{ ticket.requester.first_name|first|upper }}
+                                </div>
+                                <span style="font-weight: 500; color: #374151;">{{ ticket.requester.first_name }}</span>
+                            </div>
+                        </td>
+                        
+                        <td>
+                            <span class="badge-dept-outline" title="{{ ticket.environment|default:'Não informado' }}">
+                                <i class="bi bi-geo-alt me-1"></i> {{ ticket.environment|default:"Não informado"|truncatechars:30 }}
+                            </span>
+                        </td>
+                        
+                        <td><span class="badge-status-solid" style="background-color: {{ ticket.status.color|default:'#3B82F6' }};">{{ ticket.status.name }}</span></td>
+                        <td>
+                            {% if ticket.due_date and ticket.due_date < agora and ticket.status.name != 'Concluído' %}
+                                <div class="date-overdue"><i class="bi bi-exclamation-circle-fill"></i> {{ ticket.due_date|date:"d/m/Y" }}</div>
+                            {% else %}
+                                <div class="date-normal">{{ ticket.created_at|date:"d/m/Y" }}</div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-5"><p class="text-muted mb-0">Nenhum chamado encontrado.</p></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center justify-content-md-start mt-4 pt-2">
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-umj mb-0 flex-wrap justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ preserved_filters }}"><i class="bi bi-chevron-left"></i></a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}&{{ preserved_filters }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ preserved_filters }}"><i class="bi bi-chevron-right"></i></a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    function setScope(scopeValue) {
+        document.getElementById('scopeInput').value = scopeValue;
+        document.getElementById('mainFilterForm').submit();
+    }
+    function removeFilter(type, id) {
+        let selectorId = type === 'status' ? 'status_' + id : 'dept_' + id;
+        let checkbox = document.getElementById(selectorId);
+        if (checkbox) {
+            checkbox.checked = false;
+            document.getElementById('mainFilterForm').submit();
+        }
+    }
+</script>
+
+{% endblock %}

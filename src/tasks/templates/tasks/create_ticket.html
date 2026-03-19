@@ -1,0 +1,371 @@
+{% extends 'base_internal.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<style>
+    /* --- ESTILOS GERAIS --- */
+    
+    /* Títulos das Seções */
+    .section-title {
+        color: #575F6C !important;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    /* Labels (iguais para ambos os lados) */
+    .form-label {
+        color: #6c757d !important;
+        font-size: 0.85rem !important;
+        font-weight: 500;
+        margin-bottom: 0.4rem;
+    }
+
+    /* --- PADRONIZAÇÃO TOTAL DOS INPUTS COM FUNDO #F8F9FA --- */
+    .form-control, .form-select {
+        padding: 0.75rem !important;
+        background-color: #F8F9FA !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 8px !important;
+        color: #212529;
+        font-size: 1rem;
+    }
+
+    /* Placeholders suaves */
+    .form-control::placeholder {
+        color: #adb5bd !important;
+        opacity: 1;
+    }
+
+    /* Focus (efeito ao clicar) - Mantém o fundo #F8F9FA */
+    .form-control:focus, .form-select:focus {
+        border-color: #86b7fe !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+        background-color: #F8F9FA !important;
+    }
+
+    /* --- ESTRUTURA LATERAL --- */
+    /* Fundo do card lateral */
+    .bg-sidebar-form {
+        background-color: #FBFCFD !important;
+        border-left: 1px solid #e9ecef;
+        height: 100%;
+    }
+
+    /* --- COMPONENTE DE DESCRIÇÃO + ANEXO --- */
+    textarea.form-control {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        min-height: 150px;
+    }
+
+    .attachment-wrapper {
+        background-color: #F8F9FA;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    /* --- ESTILO DOS ITENS (BALÕES) --- */
+    .item-badge {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        color: #495057;
+        padding: 6px 12px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+    }
+
+    .item-badge:hover {
+        background-color: #e9ecef;
+    }
+
+    .item-badge .badge-qty {
+        background-color: #e9ecef;
+        color: #212529;
+        padding: 2px 7px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .item-badge .btn-close-item {
+        cursor: pointer;
+        color: #dc3545;
+        opacity: 0.5;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .item-badge .btn-close-item:hover {
+        opacity: 1;
+    }
+</style>
+
+<div class="px-2">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-transparent p-0">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-muted">Dashboard</a></li>
+            <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">Abrir Novo Chamado</li>
+        </ol>
+    </nav>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="card-body p-0">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="row g-0">
+                    <div class="col-12 p-4 pb-0">
+                        <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-0">
+                            <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>Erros de Validação:</h6>
+                            <ul class="mb-0 small">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li><strong>Erro Geral:</strong> {{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row g-0 d-flex align-items-stretch">
+                    <div class="col-lg-7 p-4 p-md-5">
+                        <h5 class="fw-bold mb-4 section-title">Informações Principais</h5>
+                        
+                        <div class="mb-4">
+                            {{ form.title|as_crispy_field }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                {{ form.requester|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                {{ form.department|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            {{ form.description|as_crispy_field }}
+                            
+                            <div class="attachment-wrapper d-flex flex-column align-items-start">
+                                <div class="d-flex align-items-center gap-2 mb-2 w-100">
+                                    <i class="bi bi-paperclip text-muted"></i>
+                                    <div class="w-100">
+                                        <label class="form-label mb-1" style="font-size: 0.8rem;">Anexar Arquivos (Opcional)</label>
+                                        <input type="file" id="fileSelectorProxy" class="form-control form-control-sm bg-white" multiple>
+                                    </div>
+                                </div>
+                                
+                                <div id="selectedFilesList" class="d-flex flex-column gap-1 w-100 mt-1"></div>
+                                
+                                <input type="file" name="attachments" id="realFileSubmit" multiple class="d-none">
+                            </div>
+                            </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="bg-sidebar-form p-4 p-md-5">
+                            <h5 class="fw-bold mb-4 section-title">Detalhes Técnicos</h5>
+
+                            <div class="mb-4">
+                                {{ form.due_date|as_crispy_field }}
+                            </div>
+
+                            <div class="mb-4">
+                                {{ form.unit|as_crispy_field }}
+                            </div>
+
+                            <div class="mb-4">
+                                {{ form.environment|as_crispy_field }}
+                            </div>
+
+                            <div class="mb-4">
+                                {{ form.action|as_crispy_field }}
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Itens Relacionados</label>
+                                
+                                <div class="input-group mb-2">
+                                    <input type="text" id="tempItemName" class="form-control" placeholder="Ex: Cadeira, Monitor..." style="border-right: 0;">
+                                    
+                                    <input type="number" id="tempItemQty" class="form-control" placeholder="Qtd" value="1" min="1" style="max-width: 70px; border-left: 0; border-right: 0;">
+                                    
+                                    <button class="btn btn-outline-secondary bg-white text-secondary" type="button" id="btnAddItem" style="border-color: #dee2e6;">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+
+                                <div id="itemsContainer" class="d-flex flex-wrap gap-2 mb-2">
+                                    <span class="text-muted small fst-italic empty-msg opacity-50">Nenhum item adicionado.</span>
+                                </div>
+
+                                <input type="hidden" name="items_json" id="hiddenItemsData">
+                                
+                                <div class="d-none">
+                                    {{ form.items }}
+                                </div>
+                            </div>
+                            </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white border-top d-flex justify-content-end gap-2">
+                    <a href="{% url 'dashboard' %}" class="btn btn-light px-4 border rounded-3 py-2">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-5 rounded-3 fw-bold shadow-sm py-2">
+                        Abrir Chamado
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ==========================================
+        // LÓGICA DE ITENS RELACIONADOS
+        // ==========================================
+        const btnAdd = document.getElementById('btnAddItem');
+        const inputName = document.getElementById('tempItemName');
+        const inputQty = document.getElementById('tempItemQty');
+        const container = document.getElementById('itemsContainer');
+        const hiddenInput = document.getElementById('hiddenItemsData');
+        const emptyMsg = container.querySelector('.empty-msg');
+        
+        let itemsList = []; 
+
+        function addItem() {
+            const name = inputName.value.trim();
+            const qty = parseInt(inputQty.value);
+
+            if (name === '' || qty < 1) return;
+
+            itemsList.push({ name: name, qty: qty });
+            updateHiddenInput();
+
+            const badge = document.createElement('div');
+            badge.className = 'item-badge animate__animated animate__fadeIn';
+            badge.innerHTML = `
+                <span>${name}</span>
+                <span class="badge-qty">${qty}</span>
+                <i class="bi bi-x-circle-fill btn-close-item ms-1" onclick="removeItem(this, '${name}')"></i>
+            `;
+
+            if (emptyMsg) emptyMsg.style.display = 'none';
+            container.appendChild(badge);
+
+            inputName.value = '';
+            inputQty.value = '1';
+            inputName.focus();
+        }
+
+        window.removeItem = function(element, nameToRemove) {
+            element.parentElement.remove();
+            
+            const index = itemsList.findIndex(i => i.name === nameToRemove);
+            if (index > -1) {
+                itemsList.splice(index, 1);
+            }
+            
+            updateHiddenInput();
+
+            if (itemsList.length === 0 && emptyMsg) {
+                emptyMsg.style.display = 'block';
+            }
+        };
+
+        function updateHiddenInput() {
+            hiddenInput.value = JSON.stringify(itemsList);
+        }
+
+        btnAdd.addEventListener('click', addItem);
+        
+        inputName.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                addItem();
+            }
+        });
+        
+        inputQty.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addItem();
+            }
+        });
+
+        // ==========================================
+        // LÓGICA DE ACÚMULO DE MÚLTIPLOS ANEXOS
+        // ==========================================
+        const fileProxy = document.getElementById('fileSelectorProxy');
+        const realFileSubmit = document.getElementById('realFileSubmit');
+        const filesListContainer = document.getElementById('selectedFilesList');
+        
+        // O DataTransfer age como um "pen-drive virtual" para acumular os arquivos
+        const dataTransfer = new DataTransfer();
+
+        fileProxy.addEventListener('change', function() {
+            // Pega todos os arquivos que o usuário acabou de selecionar
+            for (let i = 0; i < this.files.length; i++) {
+                dataTransfer.items.add(this.files[i]);
+            }
+            
+            // Limpa o input visível para permitir selecionar o mesmo arquivo novamente se quiser
+            this.value = ''; 
+            
+            // Atualiza a interface e o input invisível
+            updateFilesUI();
+        });
+
+        function updateFilesUI() {
+            // 1. Passa os arquivos do "pen-drive virtual" para o input real que vai pro Django
+            realFileSubmit.files = dataTransfer.files;
+            
+            // 2. Limpa a lista visual
+            filesListContainer.innerHTML = '';
+            
+            // 3. Desenha um balãozinho para cada arquivo
+            Array.from(dataTransfer.files).forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'border rounded px-3 py-2 d-flex justify-content-between align-items-center bg-white shadow-sm animate__animated animate__fadeIn';
+                fileItem.innerHTML = `
+                    <div class="d-flex align-items-center gap-2 text-truncate" style="max-width: 85%;">
+                        <i class="bi bi-file-earmark-check text-primary"></i>
+                        <span class="small fw-bold text-dark text-truncate">${file.name}</span>
+                        <span class="text-muted" style="font-size: 0.7rem;">(${(file.size / 1024).toFixed(1)} kb)</span>
+                    </div>
+                    <i class="bi bi-trash3 text-danger" style="cursor:pointer; opacity: 0.7;" onclick="removeFile(${index})" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" title="Remover arquivo"></i>
+                `;
+                filesListContainer.appendChild(fileItem);
+            });
+        }
+
+        // Função para remover um arquivo específico da lista
+        window.removeFile = function(index) {
+            dataTransfer.items.remove(index);
+            updateFilesUI(); // Redesenha a tela
+        };
+    });
+</script>
+{% endblock %}
